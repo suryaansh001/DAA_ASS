@@ -1,58 +1,49 @@
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+from heapq import heappop, heappush
 
-def create_main_graph():
+def create_main_graph(file_path):
     """Create directed graph with all edge attributes"""
-    return nx.from_pandas_edgelist(df,
-                                 source='source_name',
-                                 target='destination_name',
-                                 edge_attr=True,
-                                 create_using=nx.DiGraph())
+    df = pd.read_csv(file_path)
+    G = nx.from_pandas_edgelist(df, source='source_name', target='destination_name', edge_attr=True, create_using=nx.DiGraph())
+    return G
 
-def create_path_subgraph(G, path):
-    """Create subgraph containing only nodes and edges in the path"""
-    subG = nx.DiGraph()
-    subG.add_nodes_from(path)
-    
-    # Add edges from the path
-    for i in range(len(path)-1):
-        u, v = path[i], path[i+1]
-        if G.has_edge(u, v):
-            edge_data = G.get_edge_data(u, v)
-            subG.add_edge(u, v, **edge_data)
-    
-    return subG
-
-def visualize_subgraph(subG):
-    """Visualize only the relevant nodes in path"""
+def visualize_subgraph(G, path):
+    """Visualize only the necessary nodes and edges in the path"""
     plt.figure(figsize=(10, 6))
-    pos = nx.spring_layout(subG)
+    sub_G = G.subgraph(path)
+    pos = nx.spring_layout(sub_G, k=0.5)
     
-    nx.draw(subG, pos, with_labels=True,
-           node_size=1500,
-           node_color='skyblue',
-           edge_color='gray',
-           width=2,
-           arrowsize=20)
+    nx.draw(sub_G, pos, with_labels=True, node_size=800, node_color='skyblue', edge_color='grey', font_size=8, arrowsize=20)
+    path_edges = list(zip(path, path[1:]))
+    nx.draw_networkx_nodes(sub_G, pos, nodelist=path, node_color='red')
+    nx.draw_networkx_edges(sub_G, pos, edgelist=path_edges, edge_color='red', width=2)
     
-    plt.title("Optimal Route Visualization")
+    plt.title("Optimized Route Visualization")
     plt.show()
 
-def get_shortest_path(G, source, target, weight_attr):
-    """Get shortest path with error handling"""
+def dijkstra_shortest_path(G, source, target, weight_attr):
+    """Find the shortest path using Dijkstra's algorithm"""
     try:
         path = nx.dijkstra_path(G, source, target, weight=weight_attr)
         length = nx.dijkstra_path_length(G, source, target, weight=weight_attr)
         return path, length
-    except (nx.NodeNotFound, nx.NetworkXNoPath) as e:
-        print(f"Error: {str(e)}")
+    except (nx.NodeNotFound, nx.NetworkXNoPath):
         return None, None
 
-# Main execution
+def astar_shortest_path(G, source, target, weight_attr):
+    """Find the shortest path using A* algorithm"""
+    try:
+        path = nx.astar_path(G, source, target, weight=weight_attr)
+        length = nx.astar_path_length(G, source, target, weight=weight_attr)
+        return path, length
+    except (nx.NodeNotFound, nx.NetworkXNoPath):
+        return None, None
+
 if __name__ == "__main__":
-    df = pd.read_csv('final2_delhivery.csv')
-    main_graph = create_main_graph()
+    file_path = 'final2_delhivery.csv'
+    main_graph = create_main_graph(file_path)
     
     source = input("Enter source city: ").strip().title()
     target = input("Enter destination city: ").strip().title()
@@ -60,16 +51,24 @@ if __name__ == "__main__":
     if source not in main_graph.nodes or target not in main_graph.nodes:
         print("Error: Invalid city names")
     else:
-        choice = input("Choose optimization:\n1. Shortest time\n2. Shortest distance\n")
+        choice = input("Choose optimization:\n1. Shortest time (Dijkstra)\n2. Shortest distance (Dijkstra)\n3. Shortest time (A*)\n4. Shortest distance (A*)\n")
         
-        weight_attr = 'efficiency' if choice == '1' else 'actual_distance_to_destination'
-        path, length = get_shortest_path(main_graph, source, target, weight_attr)
+        if choice == '1':
+            path, length = dijkstra_shortest_path(main_graph, source, target, 'efficiency')
+            algo = "Dijkstra (Efficiency)"
+        elif choice == '2':
+            path, length = dijkstra_shortest_path(main_graph, source, target, 'actual_distance_to_destination')
+            algo = "Dijkstra (Distance)"
+        elif choice == '3':
+            path, length = astar_shortest_path(main_graph, source, target, 'efficiency')
+            algo = "A* (Efficiency)"
+        elif choice == '4':
+            path, length = astar_shortest_path(main_graph, source, target, 'actual_distance_to_destination')
+            algo = "A* (Distance)"
+        else:
+            print("Invalid choice")
+            path = None
         
         if path:
-            # Create and visualize subgraph
-            subG = create_path_subgraph(main_graph, path)
-            visualize_subgraph(subG)
-            
-            print(f"\nOptimal path ({'time' if choice == '1' else 'distance'}):")
-            print(" -> ".join(path))
-            print(f"Total {'time' if choice == '1' else 'distance'}: {length}")
+            print(f"Optimized path ({algo}): {path}\nTotal weight: {length}")
+            visualize_subgraph(main_graph, path)
