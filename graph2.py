@@ -6,7 +6,7 @@ from heapq import heappop, heappush
 def create_main_graph(file_path):
     """Create directed graph with all edge attributes"""
     df = pd.read_csv(file_path)
-    G = nx.from_pandas_edgelist(df, source='source_name', target='destination_name', edge_attr=True, create_using=nx.DiGraph())
+    G = nx.from_pandas_edgelist(df, source='source_name', target='destination_name', edge_attr=True, create_using=nx.Graph())
     return G
 
 def visualize_subgraph(G, path):
