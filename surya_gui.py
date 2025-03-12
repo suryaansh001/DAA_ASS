@@ -2,45 +2,46 @@ import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QComboBox, QLabel, QVBoxLayout, QPushButton, QWidget
+from PyQt5.QtWidgets import QComboBox,QLabel,QVBoxLayout,QPushButton,QWidget
 
 # directed graph banane ka function jo edge attributes ke saath kaam karta hai
 def create_main_graph(file_path):
+    
     df=pd.read_csv(file_path)
-    G=nx.from_pandas_edgelist(df, source='source_name', target='destination_name', edge_attr=True, create_using=nx.DiGraph())
+    G=nx.from_pandas_edgelist(df,source='source_name',target='destination_name',edge_attr=True,create_using=nx.DiGraph())
     return G
 
 # subgraph visualize karne ka function jo sirf zaroori nodes aur edges ko dikhata hai
-def visualize_subgraph(G, path):
-    plt.figure(figsize=(10, 6))
-    sub_G=G.edge_subgraph(list(zip(path, path[1:])))
-    pos=nx.spring_layout(sub_G, k=0.5)
+def visualize_subgraph(G,path):
+    plt.figure(figsize=(10,6))
+    sub_G=G.edge_subgraph(list(zip(path,path[1:])))
+    pos=nx.spring_layout(sub_G,k=0.5)
     
-    nx.draw(sub_G, pos, with_labels=True, node_size=800, node_color='skyblue', edge_color='grey', font_size=8, arrowsize=20)
-    path_edges=list(zip(path, path[1:]))
-    nx.draw_networkx_nodes(sub_G, pos, nodelist=path, node_color='red')
-    nx.draw_networkx_edges(sub_G, pos, edgelist=path_edges, edge_color='red', width=2)
+    nx.draw(sub_G,pos,with_labels=True,node_size=800,node_color='skyblue',edge_color='grey',font_size=8,arrowsize=20)
+    path_edges=list(zip(path,path[1:]))
+    nx.draw_networkx_nodes(sub_G,pos,nodelist=path,node_color='red')
+    nx.draw_networkx_edges(sub_G,pos,edgelist=path_edges,edge_color='red',width=2)
     
     plt.title("optimized route visualization")
     plt.show()
 
 # dijkstra's algorithm ka use karke shortest path nikalne ka function
-def dijkstra_shortest_path(G, source, target, weight_attr):
+def dijkstra_shortest_path(G,source,target,weight_attr):
     try:
-        path=nx.dijkstra_path(G, source, target, weight=weight_attr)
-        length=nx.dijkstra_path_length(G, source, target, weight=weight_attr)
-        return path, length
-    except (nx.NodeNotFound, nx.NetworkXNoPath):
-        return None, None
+        path=nx.dijkstra_path(G,source,target,weight=weight_attr)
+        length=nx.dijkstra_path_length(G,source,target,weight=weight_attr)
+        return path,length
+    except (nx.NodeNotFound,nx.NetworkXNoPath):
+        return None,None
 
 # a* algorithm ka use karke shortest path nikalne ka function
-# def astar_shortest_path(G, source, target, weight_attr):
+# def astar_shortest_path(G,source,target,weight_attr):
 #     try:
-#         path=nx.astar_path(G, source, target, weight=weight_attr)
-#         length=nx.astar_path_length(G, source, target, weight=weight_attr)
-#         return path, length
-#     except (nx.NodeNotFound, nx.NetworkXNoPath):
-#         return None, None
+#         path=nx.astar_path(G,source,target,weight=weight_attr)
+#         length=nx.astar_path_length(G,source,target,weight=weight_attr)
+#         return path,length
+#     except (nx.NodeNotFound,nx.NetworkXNoPath):
+#         return None,None
 
 # "find path" button ke click hone par yeh function call hota hai
 def on_find_path():
@@ -51,7 +52,7 @@ def on_find_path():
     target=target_combobox.currentText()
     algo_choice=algo_combobox.currentText()
     
-    # selected source, target, aur algorithm check karna
+    # selected source,target,aur algorithm check karna
     print(f"selected source: {source}")
     print(f"selected target: {target}")
     print(f"selected algorithm: {algo_choice}")
@@ -64,14 +65,14 @@ def on_find_path():
     weight_attr='efficiency'
     
     if 'dijkstra' in algo_choice:
-        path, length=dijkstra_shortest_path(main_graph, source, target, weight_attr)
+        path,length=dijkstra_shortest_path(main_graph,source,target,weight_attr)
     else:
-        path, length=astar_shortest_path(main_graph, source, target, weight_attr)
+        path,length=astar_shortest_path(main_graph,source,target,weight_attr)
     
     if path:
         result_label.setText(f"optimized path: {path}\ntotal weight: {length}")
         print(f"path found: {path} with total length: {length}")
-        visualize_subgraph(main_graph, path)
+        visualize_subgraph(main_graph,path)
     else:
         result_label.setText("no path found.")
         print("no path found.")
@@ -91,7 +92,7 @@ app=QtWidgets.QApplication([])
 
 window=QWidget()
 window.setWindowTitle("logistics network optimization")
-window.setGeometry(1000, 1000, 1000, 1000)
+window.setGeometry(1000,1000,1000,1000)
 
 layout=QVBoxLayout()
 
